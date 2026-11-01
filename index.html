@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#101418"/>
+<link rel="manifest" href="manifest.webmanifest"/>
+<title>Voxel Survival</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#eee;font:14px "Trebuchet MS",system-ui,sans-serif;user-select:none}
+canvas#gl{position:fixed;inset:0;width:100%;height:100%;display:block}
+canvas#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.hidden{display:none!important}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(ellipse at center,rgba(0,0,0,.25),rgba(0,0,0,.7));z-index:20}
+#menu{justify-content:flex-start;padding-top:7vh;background:linear-gradient(rgba(0,0,0,.35),rgba(0,0,0,.05) 40%,rgba(0,0,0,.55))}
+.logo{position:relative;text-align:center;margin-bottom:4vh}
+.logo h1{margin:0;font:900 clamp(40px,9vw,92px)/1 "Courier New",monospace;letter-spacing:.06em;color:#cfcfcf;text-shadow:0 1px 0 #aaa,0 2px 0 #8a8a8a,0 3px 0 #707070,0 4px 0 #555,0 5px 0 #444,0 6px 0 #333,0 8px 8px rgba(0,0,0,.7);-webkit-text-stroke:2px #3b3b3b}
+.logo h1 span{color:#6fcf4a;-webkit-text-stroke:2px #2a5a1a;text-shadow:0 1px 0 #4fa030,0 2px 0 #3f8a26,0 3px 0 #2f6e1c,0 4px 0 #245a16,0 5px 0 #1c4812,0 6px 0 #123008,0 8px 8px rgba(0,0,0,.7)}
+.logo h2{margin:6px 0 0;font:700 clamp(14px,2.2vw,22px) "Courier New",monospace;letter-spacing:.5em;color:#ddd;text-shadow:2px 2px 0 #222}
+#splash{position:absolute;right:-8%;bottom:-6px;color:#ff0;font:900 clamp(13px,1.9vw,20px) "Courier New",monospace;text-shadow:2px 2px 0 #3a3a00;transform:rotate(-16deg);animation:pulse 1s ease-in-out infinite alternate;white-space:nowrap}
+@keyframes pulse{from{transform:rotate(-16deg) scale(.94)}to{transform:rotate(-16deg) scale(1.06)}}
+.menubox{display:flex;flex-direction:column;gap:10px;align-items:center}
+button,input,select{font:inherit}
+button{position:relative;min-width:min(380px,86vw);padding:11px 18px;color:#e8e8e8;font:700 16px "Courier New",monospace;letter-spacing:.04em;cursor:pointer;background:linear-gradient(#7d7d80,#6a6a6d 50%,#5c5c5f 50%,#525255);border:2px solid #111;border-radius:0;box-shadow:inset 2px 2px 0 rgba(255,255,255,.35),inset -2px -2px 0 rgba(0,0,0,.45);text-shadow:2px 2px 0 #2c2c2e}
+button:hover:not(:disabled){background:linear-gradient(#8e93c8,#7a7fb4 50%,#6c71a6 50%,#62679c);color:#ffffa0}
+button:active:not(:disabled){transform:translateY(1px)}
+button:disabled{opacity:.55;cursor:default;color:#aaa}
+button.danger{background:linear-gradient(#c05050,#a03838 50%,#8c2c2c 50%,#7a2424)}
+input[type=text]{background:#161616;color:#fff;border:2px solid #000;box-shadow:inset 2px 2px 0 #444;padding:9px;width:min(380px,86vw);font:700 15px "Courier New",monospace;text-align:center}
+input[type=text]::placeholder{color:#888}
+.row{display:flex;gap:8px;align-items:center;color:#eee;text-shadow:1px 1px 0 #000}.row label{min-width:130px;text-align:right}
+.help{margin-top:2vh;max-width:640px;text-align:center;font-size:12px;line-height:1.7;color:#ddd;text-shadow:1px 1px 0 #000}
+.help kbd{background:#2b2b2e;border:1px solid #000;border-bottom-width:3px;border-radius:3px;padding:0 5px;font:700 11px "Courier New",monospace;color:#fff}
+.ver{position:absolute;left:10px;bottom:8px;font:12px "Courier New",monospace;color:#ccc;text-shadow:1px 1px 0 #000}
+#screen-title{font:900 34px "Courier New",monospace;color:#eee;text-shadow:3px 3px 0 #222;margin:0 0 8px}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:5}
+#cross{position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px}
+#cross:before,#cross:after{content:"";position:absolute;background:#fff;mix-blend-mode:difference}
+#cross:before{left:8px;top:0;width:2px;height:18px}#cross:after{top:8px;left:0;height:2px;width:18px}
+#bars{position:absolute;left:50%;bottom:66px;transform:translateX(-50%);display:flex;gap:8px}
+.bar{width:150px;height:14px;background:#000a;border:2px solid #000;position:relative;box-shadow:inset 1px 1px 0 #fff3}.bar i{position:absolute;inset:0;width:50%;display:block;background-image:linear-gradient(rgba(255,255,255,.35),transparent 55%,rgba(0,0,0,.3))}
+.bar span{position:absolute;inset:0;font:700 10px/12px "Courier New",monospace;text-align:center;text-shadow:1px 1px 0 #000}
+#hot{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);display:flex;gap:0;background:#000a;border:3px solid #111;padding:2px}
+.slot{width:48px;height:48px;background:#8b8b8b;border:2px solid;border-color:#373737 #fff #fff #373737;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#hot .slot{background:#6e6e6e;border-color:#2a2a2a #9a9a9a #9a9a9a #2a2a2a}
+.slot.sel{outline:3px solid #fff;outline-offset:-3px;background:#a0a0a0;z-index:2}
+.slot img.ic{width:36px;height:36px;image-rendering:pixelated;pointer-events:none}
+.slot b{position:absolute;right:3px;bottom:0;font:900 13px "Courier New",monospace;color:#fff;text-shadow:2px 2px 0 #333}
+.slot em{position:absolute;left:4px;right:4px;bottom:2px;height:3px;background:#222;display:block}
+.slot em:after{content:"";display:block;height:100%;width:var(--w);background:var(--c)}
+#held{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);font:700 16px "Courier New",monospace;text-shadow:2px 2px 0 #000;opacity:0;transition:opacity .4s}
+#info{position:absolute;left:8px;top:8px;background:#0007;padding:6px 10px;border-radius:2px;line-height:1.5;font:12px "Courier New",monospace;text-shadow:1px 1px 0 #000}
+#mini{position:absolute;right:8px;top:8px;border:3px solid #111;background:#000;width:144px;height:144px;image-rendering:pixelated;box-shadow:0 0 0 2px #888}
+#compass{position:absolute;right:8px;top:162px;width:150px;text-align:center;background:#000a;border:2px solid #111;font:700 13px "Courier New",monospace;padding:2px}
+#toast{position:absolute;left:50%;top:60px;transform:translateX(-50%);background:#000b;border:2px solid #444;padding:6px 14px;opacity:0;transition:opacity .4s;font-weight:700}
+#caption{position:absolute;left:50%;bottom:130px;transform:translateX(-50%);color:#ff8;text-shadow:0 0 3px #000;font-size:16px}
+#hurt{position:absolute;inset:0;background:radial-gradient(transparent 40%,#f00a);opacity:0;transition:opacity .25s}
+#dbg{position:absolute;left:8px;top:96px;background:#0008;padding:6px;font:12px monospace;white-space:pre}
+#savei{position:absolute;right:8px;bottom:8px;font-size:12px;color:#fc6}
+#panel{display:flex;gap:16px;background:#c6c6c6;color:#222;padding:16px;border:3px solid;border-color:#fff #555 #555 #fff;max-width:96vw;max-height:92vh;overflow:auto;box-shadow:0 0 0 3px #000}
+#panel .slot{background:#8b8b8b}
+#panel p{color:#222}
+#grid{display:grid;grid-template-columns:repeat(9,48px);gap:0}
+#recipes{width:320px;max-height:430px;overflow:auto;display:flex;flex-direction:column;gap:4px}
+#craftArea{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px;background:#a0a0a0;border:2px solid;border-color:#555 #fff #fff #555;margin-bottom:8px}
+#craftGrid{display:grid;grid-template-columns:repeat(var(--cols),40px);gap:2px}
+#craftGrid .slot,#craftResult{width:40px;height:40px}
+#craftResult{min-width:40px;padding:2px;background:#aaa;border:2px solid;border-color:#373737 #fff #fff #373737}
+#craftHint{font-size:11px;text-align:center;margin:0 0 6px}
+#recipes button{min-width:0;text-align:left;padding:5px 8px;font-size:12px;display:flex;gap:8px;align-items:center}
+#recipes button img{width:28px;height:28px;image-rendering:pixelated}
+#chestPanel{display:flex;flex-direction:column;gap:12px;background:#c6c6c6;color:#222;padding:16px;border:3px solid;border-color:#fff #555 #555 #fff;max-width:96vw;max-height:92vh;overflow:auto;box-shadow:0 0 0 3px #000}
+#chestGrid,#chestInv{display:grid;grid-template-columns:repeat(9,48px)}
+#chestPanel .slot{background:#8b8b8b}
+.tabs{display:flex;gap:6px;margin-bottom:6px}.tabs button{min-width:0;padding:4px 10px}
+#panel input[type=text]{width:150px;padding:5px;font-size:12px}
+#map{width:min(90vh,90vw);height:min(90vh,90vw);border:3px solid #667;background:#000;image-rendering:pixelated}
+body.cb .hp i{background-color:#e69f00!important}body.cb .hu i{background-color:#56b4e9!important}body.cb .th i{background-color:#cc79a7!important}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas><canvas id="fx"></canvas>
+<div id="hud" class="hidden">
+ <div id="hurt"></div><div id="cross"></div>
+ <div id="info"></div><canvas id="mini" width="96" height="96"></canvas><div id="compass"></div>
+ <div id="bars">
+  <div class="bar hp"><i style="background:#d33"></i><span></span></div>
+  <div class="bar hu"><i style="background:#c82"></i><span></span></div>
+  <div class="bar th"><i style="background:#38d"></i><span></span></div>
+  <div class="bar st"><i style="background:#8c3"></i><span></span></div>
+  <div class="bar ox hidden"><i style="background:#8ef"></i><span></span></div>
+ </div>
+ <div id="hot"></div><div id="held"></div><div id="toast"></div><div id="caption"></div><div id="dbg" class="hidden"></div><div id="savei"></div>
+</div>
+<div id="menu" class="screen">
+ <div class="logo"><h1>VOXEL<span>CRAFT</span></h1><h2>S U R V I V A L</h2><div id="splash"></div></div>
+ <div class="menubox">
+  <button id="bCont">Spielstand fortsetzen</button>
+  <input type="text" id="seed" placeholder="Welt-Seed (leer = zufällig)"/>
+  <button id="bNew">Neue Welt</button>
+ </div>
+ <div class="help"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> bewegen · <kbd>2×W</kbd> sprinten · <kbd>Shift</kbd> schleichen · <kbd>Space</kbd> springen<br>Linksklick abbauen/angreifen · Rechtsklick platzieren/essen · <kbd>F</kbd> benutzen<br><kbd>E</kbd> Inventar &amp; Handwerk · <kbd>M</kbd> Karte · <kbd>1-9</kbd> Hotbar · <kbd>F3</kbd> Debug</div>
+ <div class="ver">VoxelCraft 0.2 – läuft komplett im Browser</div>
+</div>
+<div id="pause" class="screen hidden">
+ <div id="screen-title">Spiel pausiert</div>
+ <button id="bRes">Weiter</button><button id="bSave">Speichern</button>
+ <div class="row"><label>Sichtweite</label><input type="range" id="sRd" min="3" max="10"/></div>
+ <div class="row"><label>Nebel</label><input type="range" id="sFog" min="0.4" max="1.2" step="0.1"/></div>
+ <div class="row"><label>Sichtfeld</label><input type="range" id="sFov" min="60" max="100"/></div>
+ <div class="row"><label>Maus-Empfindl.</label><input type="range" id="sSens" min="0.3" max="3" step="0.1"/></div>
+ <div class="row"><label>Lautstärke</label><input type="range" id="sVol" min="0" max="1" step="0.05"/></div>
+ <div class="row"><label><input type="checkbox" id="sCb"/> Farbenblind</label><label><input type="checkbox" id="sRm"/> Weniger Bewegung</label><label><input type="checkbox" id="sCap"/> Untertitel</label></div>
+ <button id="bFull">Vollbild</button><button id="bQuit">Zum Hauptmenü</button>
+</div>
+<div id="inv" class="screen hidden"><div id="panel">
+ <div><div class="tabs"><button data-t="i">Inventar</button><button data-t="s">Fertigkeiten</button></div><div id="invL"></div></div>
+ <div><div class="tabs"><b style="padding:4px">Handwerk</b><input type="text" id="rs" placeholder="Suchen…" style="width:150px"/></div><div id="craftArea"><div id="craftGrid"></div><button id="craftResult" title="Ergebnis herstellen"></button></div><p id="craftHint"></p><div id="recipes"></div></div>
+</div></div>
+<div id="chest" class="screen hidden"><div id="chestPanel"><div id="screen-title">Truhe</div><div>Truheninhalt</div><div id="chestGrid"></div><div>Inventar · Klick zum Verschieben</div><div id="chestInv"></div><button id="bChestClose">Schließen</button></div></div>
+<div id="dead" class="screen hidden"><div id="screen-title" style="color:#e44;font-size:48px">Du bist gestorben!</div><div id="cause"></div>
+ <button id="bResp">Respawn</button><button id="bTp">Respawn + zum Todesort</button></div>
+<div id="mapS" class="screen hidden"><canvas id="map" width="512" height="512"></canvas></div>
+<script src="textures.js"></script>
+<script src="core.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

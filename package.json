@@ -1,0 +1,7 @@
+{
+  "name": "voxel-survival",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Voxel-Survival im Browser - keine Abhängigkeiten, kein Build-Schritt",
+  "scripts": { "start": "npx serve . -l 8080" }
+}
